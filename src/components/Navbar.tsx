@@ -15,6 +15,7 @@ import {
   ChevronDown,
   Hammer,
   Gift,
+  Sun,
 } from 'lucide-react';
 import { AddonTab, AddonProject } from '../types/addon';
 import { STARTER_TEMPLATES } from '../utils/templates';
@@ -48,6 +49,7 @@ export const Navbar: React.FC<NavbarProps> = ({
     { id: 'loot', label: 'Лут', icon: <Gift className="w-4 h-4" />, badge: project.lootTables.length },
     { id: 'scripts', label: 'Скрипты', icon: <FileCode className="w-4 h-4" />, badge: project.scripts.length },
     { id: 'textures', label: 'Текстуры', icon: <Palette className="w-4 h-4" />, badge: project.textures.length },
+    { id: 'shaders', label: 'Шейдеры', icon: <Sun className="w-4 h-4 text-amber-400" />, badge: project.shaders?.enabled ? 1 : undefined },
     { id: 'ai_assistant', label: 'AI Создатель', icon: <Sparkles className="w-4 h-4 text-amber-400" /> },
     { id: 'files', label: 'Файлы', icon: <Layers className="w-4 h-4" /> },
     { id: 'export', label: 'Установка', icon: <HelpCircle className="w-4 h-4" /> },

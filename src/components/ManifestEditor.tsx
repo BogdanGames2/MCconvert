@@ -6,9 +6,16 @@ import { generateBedrockUuid } from '../utils/uuid';
 interface ManifestEditorProps {
   manifest: BedrockManifest;
   onChange: (manifest: BedrockManifest) => void;
+  onEnsureCreatorItem?: () => void;
+  hasCreatorItem?: boolean;
 }
 
-export const ManifestEditor: React.FC<ManifestEditorProps> = ({ manifest, onChange }) => {
+export const ManifestEditor: React.FC<ManifestEditorProps> = ({
+  manifest,
+  onChange,
+  onEnsureCreatorItem,
+  hasCreatorItem = true,
+}) => {
   const handleRegenerateUuids = () => {
     onChange({
       ...manifest,
@@ -144,6 +151,54 @@ export const ManifestEditor: React.FC<ManifestEditorProps> = ({ manifest, onChan
         </div>
       </div>
 
+      {/* Starter Item: СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ */}
+      <div className="bg-gradient-to-r from-amber-950/40 via-slate-900 to-slate-900 border border-amber-500/30 rounded-xl p-5 shadow-sm">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2">
+              <span className="text-lg">👑</span>
+              <h3 className="text-sm font-bold text-amber-300">
+                Стартовый предмет: «СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ»
+              </h3>
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-200 border border-amber-500/30">
+                Легендарный
+              </span>
+            </div>
+            <p className="text-xs text-slate-300">
+              При входе в мир игроку выдается священный артефакт Создателя (+25 урона, прочность 9999, зачарованное сияние, праздничный салют и баффы).
+            </p>
+          </div>
+
+          <div className="flex items-center gap-3">
+            {onEnsureCreatorItem && !hasCreatorItem && (
+              <button
+                onClick={onEnsureCreatorItem}
+                className="px-3 py-1.5 text-xs font-semibold bg-amber-500 hover:bg-amber-400 text-slate-950 rounded-lg transition shadow"
+              >
+                + Создать предмет
+              </button>
+            )}
+
+            <label className="flex items-center gap-2.5 cursor-pointer bg-slate-950 px-3 py-1.5 rounded-lg border border-amber-500/30">
+              <span className="text-xs font-semibold text-slate-200">
+                {manifest.giveCreatorItemOnStart !== false ? 'Выдавать при старте' : 'Отключено'}
+              </span>
+              <input
+                type="checkbox"
+                checked={manifest.giveCreatorItemOnStart !== false}
+                onChange={(e) =>
+                  onChange({
+                    ...manifest,
+                    giveCreatorItemOnStart: e.target.checked,
+                  })
+                }
+                className="w-4 h-4 rounded text-amber-500 focus:ring-amber-500 bg-slate-900 border-slate-700 cursor-pointer"
+              />
+            </label>
+          </div>
+        </div>
+      </div>
+
       {/* Experimental Toggles Card */}
       <div className="bg-slate-900 border border-slate-800 rounded-xl p-5 shadow-sm">
         <h3 className="text-sm font-bold text-white flex items-center gap-2 mb-2">
@@ -165,6 +220,11 @@ export const ManifestEditor: React.FC<ManifestEditorProps> = ({ manifest, onChan
               id: 'holidayCreatorFeatures',
               title: 'Праздничные возможности создателя',
               desc: 'Необходимо для кастомных блоков, предметов и рецептов в Bedrock.',
+            },
+            {
+              id: 'renderDragonDeferred',
+              title: 'Render Dragon Deferred (Шейдеры и RTX)',
+              desc: 'Отложенное техническое превью: освещение, солнечные лучи, Bloom и туман.',
             },
             {
               id: 'upcomingCreatorFeatures',

@@ -1,4 +1,14 @@
-import { AddonProject, BedrockItem, BedrockBlock, BedrockEntity, BedrockRecipe, BedrockLootTable, BedrockTexture } from '../types/addon';
+import {
+  AddonProject,
+  BedrockItem,
+  BedrockBlock,
+  BedrockEntity,
+  BedrockRecipe,
+  BedrockLootTable,
+  BedrockTexture,
+  BedrockScript,
+  BedrockShaderConfig,
+} from '../types/addon';
 
 export function generateManifestJson(project: AddonProject, type: 'data' | 'resources') {
   return type === 'data' ? generateBpManifest(project) : generateRpManifest(project);
@@ -68,7 +78,7 @@ export function generateBpManifest(project: AddonProject) {
  */
 export function generateRpManifest(project: AddonProject) {
   const m = project.manifest;
-  return {
+  const rpManifest: any = {
     format_version: 2,
     header: {
       name: `${m.name} [RP]`,
@@ -86,6 +96,12 @@ export function generateRpManifest(project: AddonProject) {
       },
     ],
   };
+
+  if (project.shaders?.enabled || m.experimentalFeatures?.renderDragonDeferred) {
+    rpManifest.capabilities = ['raytraced', 'experimental_custom_biomes'];
+  }
+
+  return rpManifest;
 }
 
 /**
@@ -542,7 +558,7 @@ export function renderPixelDataToDataUrl(pixelData: string[], width: number = 16
 /**
  * Generate a procedural pixel art texture for items/blocks if user hasn't drawn one
  */
-export function generateDefaultPixelTexture(type: 'sword' | 'gem' | 'block' | 'food' | 'armor', primaryColor: string = '#3B82F6'): string[] {
+export function generateDefaultPixelTexture(type: 'sword' | 'gem' | 'block' | 'food' | 'armor' | 'crown', primaryColor: string = '#3B82F6'): string[] {
   const pixels = Array(256).fill('');
 
   if (type === 'sword') {
@@ -612,6 +628,68 @@ export function generateDefaultPixelTexture(type: 'sword' | 'gem' | 'block' | 'f
     // highlight
     pixels[4 * 16 + 7] = '#FFFFFF';
     pixels[5 * 16 + 7] = '#FFFFFF';
+  } else if (type === 'crown') {
+    // 16x16 golden royal creator crown
+    const gold = '#F59E0B';
+    const darkGold = '#B45309';
+    const lightGold = '#FDE68A';
+    const ruby = '#EF4444';
+    const emerald = '#10B981';
+    const diamond = '#06B6D4';
+    const white = '#FFFFFF';
+
+    // Base rim of crown (rows 11 and 12)
+    for (let x = 2; x <= 13; x++) {
+      pixels[12 * 16 + x] = darkGold;
+      pixels[11 * 16 + x] = gold;
+    }
+    // Gems in the base rim
+    pixels[11 * 16 + 4] = ruby;
+    pixels[11 * 16 + 7] = emerald;
+    pixels[11 * 16 + 8] = diamond;
+    pixels[11 * 16 + 11] = ruby;
+
+    // Center peak (highest, x=7,8)
+    pixels[5 * 16 + 7] = white;
+    pixels[5 * 16 + 8] = lightGold;
+    pixels[6 * 16 + 7] = emerald;
+    pixels[6 * 16 + 8] = emerald;
+    pixels[7 * 16 + 7] = gold;
+    pixels[7 * 16 + 8] = gold;
+    pixels[8 * 16 + 7] = gold;
+    pixels[8 * 16 + 8] = gold;
+    pixels[9 * 16 + 7] = gold;
+    pixels[9 * 16 + 8] = gold;
+    pixels[10 * 16 + 7] = gold;
+    pixels[10 * 16 + 8] = gold;
+
+    // Left peak (x=3,4)
+    pixels[6 * 16 + 3] = white;
+    pixels[6 * 16 + 4] = lightGold;
+    pixels[7 * 16 + 3] = ruby;
+    pixels[7 * 16 + 4] = gold;
+    pixels[8 * 16 + 3] = gold;
+    pixels[8 * 16 + 4] = gold;
+    pixels[9 * 16 + 4] = gold;
+    pixels[10 * 16 + 4] = gold;
+    pixels[10 * 16 + 5] = gold;
+    pixels[10 * 16 + 6] = gold;
+
+    // Right peak (x=11,12)
+    pixels[6 * 16 + 11] = lightGold;
+    pixels[6 * 16 + 12] = white;
+    pixels[7 * 16 + 11] = gold;
+    pixels[7 * 16 + 12] = ruby;
+    pixels[8 * 16 + 11] = gold;
+    pixels[8 * 16 + 12] = gold;
+    pixels[9 * 16 + 11] = gold;
+    pixels[10 * 16 + 11] = gold;
+    pixels[10 * 16 + 10] = gold;
+    pixels[10 * 16 + 9] = gold;
+
+    // Subtle sparkles
+    pixels[4 * 16 + 2] = '#FEF08A';
+    pixels[4 * 16 + 13] = '#FEF08A';
   } else {
     // Default 16x16 diamond badge
     for (let y = 4; y < 12; y++) {
@@ -624,3 +702,402 @@ export function generateDefaultPixelTexture(type: 'sword' | 'gem' | 'block' | 'f
 
   return pixels;
 }
+
+/**
+ * Default Bedrock Shaders configuration
+ */
+export const DEFAULT_SHADER_CONFIG: BedrockShaderConfig = {
+  enabled: true,
+  preset: 'ultra_realism',
+  sunIntensity: 1.5,
+  sunColor: '#FFF4E0',
+  ambientLightIntensity: 0.45,
+  ambientColor: '#88A3C7',
+  fogStart: 0.15,
+  fogEnd: 1.25,
+  fogDensity: 0.04,
+  fogColorDay: '#A8D2EB',
+  fogColorSunset: '#F97316',
+  fogColorNight: '#0B132B',
+  waterFogDepth: 36,
+  waterFogColor: '#0284C7',
+  toneMapping: 'aces',
+  exposure: 1.15,
+  bloomIntensity: 0.85,
+  bloomThreshold: 0.85,
+  ssaoEnabled: true,
+  ssaoRadius: 0.8,
+  screenSpaceReflections: true,
+  pbrGlobalRoughness: 0.45,
+  pbrGlobalMetalness: 0.15,
+  pbrEmissiveMultiplier: 2.2,
+};
+
+export const SHADER_PRESETS: Record<
+  string,
+  { name: string; desc: string; config: Partial<BedrockShaderConfig> }
+> = {
+  ultra_realism: {
+    name: 'Ультра Реализм (RTX & PBR)',
+    desc: 'Кинематографичный ACES тонемаппинг, мягкие тени, зеркальные отражения воды, SSAO и глубокий горизонт.',
+    config: {
+      preset: 'ultra_realism',
+      sunIntensity: 1.6,
+      sunColor: '#FFF7E6',
+      ambientLightIntensity: 0.5,
+      ambientColor: '#8EA4C7',
+      fogStart: 0.2,
+      fogEnd: 1.4,
+      fogDensity: 0.035,
+      fogColorDay: '#9FD4F5',
+      fogColorSunset: '#FB923C',
+      fogColorNight: '#0D1B2A',
+      waterFogDepth: 42,
+      waterFogColor: '#0284C7',
+      toneMapping: 'aces',
+      exposure: 1.15,
+      bloomIntensity: 0.85,
+      bloomThreshold: 0.85,
+      ssaoEnabled: true,
+      ssaoRadius: 0.8,
+      screenSpaceReflections: true,
+      pbrGlobalRoughness: 0.4,
+      pbrGlobalMetalness: 0.2,
+      pbrEmissiveMultiplier: 2.4,
+    },
+  },
+  warm_aesthetic: {
+    name: 'Тёплый Закат (Warm Aesthetic)',
+    desc: 'Уютный золотистый свет, мягкий персиковый туман, нежные солнечные лучи и романтичная атмосфера.',
+    config: {
+      preset: 'warm_aesthetic',
+      sunIntensity: 1.35,
+      sunColor: '#FED7AA',
+      ambientLightIntensity: 0.6,
+      ambientColor: '#FDBA74',
+      fogStart: 0.1,
+      fogEnd: 1.1,
+      fogDensity: 0.06,
+      fogColorDay: '#FDBA74',
+      fogColorSunset: '#EA580C',
+      fogColorNight: '#1C1917',
+      waterFogDepth: 30,
+      waterFogColor: '#0EA5E9',
+      toneMapping: 'neutral',
+      exposure: 1.05,
+      bloomIntensity: 0.95,
+      bloomThreshold: 0.9,
+      ssaoEnabled: true,
+      ssaoRadius: 0.9,
+      screenSpaceReflections: true,
+      pbrGlobalRoughness: 0.55,
+      pbrGlobalMetalness: 0.05,
+      pbrEmissiveMultiplier: 1.8,
+    },
+  },
+  gothic_dark: {
+    name: 'Мрачный Незер и Тьма (Gothic Dark)',
+    desc: 'Зловещая атмосфера тёмного фэнтези, плотный багровый туман, контрастные тени и таинственный тусклый свет.',
+    config: {
+      preset: 'gothic_dark',
+      sunIntensity: 0.8,
+      sunColor: '#FCA5A5',
+      ambientLightIntensity: 0.25,
+      ambientColor: '#3F3F46',
+      fogStart: 0.05,
+      fogEnd: 0.75,
+      fogDensity: 0.12,
+      fogColorDay: '#7F1D1D',
+      fogColorSunset: '#450A0A',
+      fogColorNight: '#09090B',
+      waterFogDepth: 18,
+      waterFogColor: '#7F1D1D',
+      toneMapping: 'reinhard',
+      exposure: 0.9,
+      bloomIntensity: 1.3,
+      bloomThreshold: 0.7,
+      ssaoEnabled: true,
+      ssaoRadius: 1.2,
+      screenSpaceReflections: true,
+      pbrGlobalRoughness: 0.7,
+      pbrGlobalMetalness: 0.3,
+      pbrEmissiveMultiplier: 3.5,
+    },
+  },
+  neon_glow: {
+    name: 'Неоновый Киберпанк (Neon Glow)',
+    desc: 'Яркое свечение светящихся руд и блоков, глубокая ночь с фиолетовым светом, сочный футуристичный Bloom.',
+    config: {
+      preset: 'neon_glow',
+      sunIntensity: 1.2,
+      sunColor: '#E0E7FF',
+      ambientLightIntensity: 0.35,
+      ambientColor: '#6366F1',
+      fogStart: 0.15,
+      fogEnd: 1.2,
+      fogDensity: 0.05,
+      fogColorDay: '#A5B4FC',
+      fogColorSunset: '#C084FC',
+      fogColorNight: '#1E1B4B',
+      waterFogDepth: 35,
+      waterFogColor: '#06B6D4',
+      toneMapping: 'aces',
+      exposure: 1.2,
+      bloomIntensity: 1.8,
+      bloomThreshold: 0.65,
+      ssaoEnabled: true,
+      ssaoRadius: 0.7,
+      screenSpaceReflections: true,
+      pbrGlobalRoughness: 0.25,
+      pbrGlobalMetalness: 0.45,
+      pbrEmissiveMultiplier: 4.5,
+    },
+  },
+};
+
+function hexToRgbFloats(hex: string): [number, number, number] {
+  let clean = (hex || '#FFFFFF').replace('#', '');
+  if (clean.length === 3) {
+    clean = clean
+      .split('')
+      .map((c) => c + c)
+      .join('');
+  }
+  const r = parseInt(clean.substring(0, 2), 16) / 255 || 1;
+  const g = parseInt(clean.substring(2, 4), 16) / 255 || 1;
+  const b = parseInt(clean.substring(4, 6), 16) / 255 || 1;
+  return [parseFloat(r.toFixed(3)), parseFloat(g.toFixed(3)), parseFloat(b.toFixed(3))];
+}
+
+/**
+ * Generate RP/lighting/global.json for Render Dragon Deferred Shaders
+ */
+export function generateLightingGlobalJson(shader: BedrockShaderConfig) {
+  const [sr, sg, sb] = hexToRgbFloats(shader.sunColor);
+  const [ar, ag, ab] = hexToRgbFloats(shader.ambientColor);
+
+  return {
+    format_version: '1.21.0',
+    'minecraft:lighting_settings': {
+      description: {
+        identifier: 'custom:lighting_settings',
+      },
+      directional_lights: {
+        sun: {
+          illuminance: Math.round(100000 * (shader.sunIntensity || 1.5)),
+          color: [sr, sg, sb],
+        },
+        moon: {
+          illuminance: 0.3,
+          color: [0.65, 0.75, 1.0],
+        },
+      },
+      ambient_lighting: {
+        color: [ar, ag, ab],
+        intensity: shader.ambientLightIntensity || 0.45,
+      },
+      tone_mapping: {
+        operator: shader.toneMapping || 'aces',
+      },
+      color_grading: {
+        exposure: shader.exposure || 1.15,
+        contrast: 1.05,
+        saturation: 1.12,
+      },
+      bloom: {
+        intensity: shader.bloomIntensity || 0.85,
+        threshold: shader.bloomThreshold || 0.85,
+      },
+      shadows: {
+        max_distance: 180.0,
+      },
+      ambient_occlusion: {
+        enabled: shader.ssaoEnabled ?? true,
+        radius: shader.ssaoRadius || 0.8,
+      },
+      reflections: {
+        screen_space_enabled: shader.screenSpaceReflections ?? true,
+      },
+      pbr_materials: {
+        global_roughness: shader.pbrGlobalRoughness || 0.45,
+        global_metalness: shader.pbrGlobalMetalness || 0.15,
+        emissive_multiplier: shader.pbrEmissiveMultiplier || 2.2,
+      },
+    },
+  };
+}
+
+/**
+ * Generate RP/fogs/custom_fog.json
+ */
+export function generateAtmosphericFogJson(shader: BedrockShaderConfig) {
+  return {
+    format_version: '1.21.0',
+    'minecraft:fog_settings': {
+      description: {
+        identifier: 'custom:atmospheric_fog',
+      },
+      distance: {
+        air: {
+          fog_start: shader.fogStart || 0.15,
+          fog_end: shader.fogEnd || 1.25,
+          fog_color: shader.fogColorDay || '#A8D2EB',
+          render_distance_type: 'render',
+        },
+        weather: {
+          fog_start: 0.05,
+          fog_end: 0.75,
+          fog_color: '#4B5563',
+          render_distance_type: 'render',
+        },
+      },
+      volumetric: {
+        density: {
+          air: {
+            max_density: shader.fogDensity || 0.04,
+            zero_density_height: 192,
+            max_density_height: 64,
+          },
+        },
+        media_coefficients: {
+          air: {
+            scattering: [0.03, 0.05, 0.08],
+            absorption: [0.01, 0.01, 0.02],
+          },
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Generate RP/fogs/water_fog.json
+ */
+export function generateWaterFogJson(shader: BedrockShaderConfig) {
+  return {
+    format_version: '1.21.0',
+    'minecraft:fog_settings': {
+      description: {
+        identifier: 'custom:water_fog',
+      },
+      distance: {
+        water: {
+          fog_start: 0.1,
+          fog_end: shader.waterFogDepth || 36.0,
+          fog_color: shader.waterFogColor || '#0284C7',
+          render_distance_type: 'fixed',
+        },
+      },
+    },
+  };
+}
+
+/**
+ * Generator for starter mythical item: "СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ"
+ */
+export function generateStarterCreatorItem(namespace: string): {
+  item: BedrockItem;
+  script: BedrockScript;
+  texture: BedrockTexture;
+} {
+  const itemId = 'creator_some_guy';
+  const fullIdentifier = `${namespace}:${itemId}`;
+  const texId = 'tex_creator_some_guy';
+
+  const item: BedrockItem = {
+    id: itemId,
+    name: 'СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ',
+    identifier: fullIdentifier,
+    category: 'Equipment',
+    maxStack: 1,
+    handEquipped: true,
+    iconTextureId: texId,
+    isWeapon: true,
+    damage: 25,
+    durability: 9999,
+    foil: true,
+    fireResistant: true,
+    customComponentsJson: JSON.stringify(
+      {
+        'minecraft:rarity': 'epic',
+        'minecraft:can_destroy_in_creative': false,
+        'minecraft:hover_text_color': 'gold',
+      },
+      null,
+      2
+    ),
+    scriptAction: 'Выдаётся автоматически игроку при первом появлении в мире с салютом и эффектами',
+  };
+
+  const script: BedrockScript = {
+    id: 'script_starter_creator_item',
+    filename: 'starter_creator_item.js',
+    description: 'Торжественно выдает игроку предмет "СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ" при первом спавне',
+    enabled: true,
+    code: `import { world, system, ItemStack } from "@minecraft/server";
+
+// Защита от повторной выдачи предмета через тег игрока
+const TAG_STARTER_RECEIVED = "has_received_creator_item_v1";
+
+world.afterEvents.playerSpawn.subscribe((event) => {
+  const player = event.player;
+  if (!player || !player.isValid) return;
+
+  // Проверяем, получал ли уже игрок артефакт Создателя
+  if (!player.hasTag(TAG_STARTER_RECEIVED)) {
+    try {
+      const inventory = player.getComponent("minecraft:inventory");
+      if (inventory && inventory.container) {
+        // Создаем священный артефакт Создателя
+        const creatorItem = new ItemStack("${fullIdentifier}", 1);
+        creatorItem.nameTag = "§6👑 СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ";
+        creatorItem.setLore([
+          "§d◆ Священный Артефакт Истинного Создателя",
+          "§e◆ Выкован великим автором аддона",
+          "§a◆ Урон: +25 | Прочность: 9999",
+          "§b◆ Владелец: §f" + player.name,
+          "§7Создатель: какой-то крутой чел"
+        ]);
+
+        inventory.container.addItem(creatorItem);
+        player.addTag(TAG_STARTER_RECEIVED);
+
+        // Торжественное оповещение в чат и спецэффекты
+        system.run(() => {
+          player.sendMessage("§6========================================");
+          player.sendMessage("§e👑 §lВНИМАНИЕ! §r§6Вам передан священный артефакт:");
+          player.sendMessage("§d✨ [СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ] ✨");
+          player.sendMessage("§aСоздатель мира благословляет вас на великие победы!");
+          player.sendMessage("§6========================================");
+
+          // Звук победы, частицы и стартовые баффы
+          try {
+            player.runCommandAsync("playsound random.levelup @s ~ ~ ~ 1.0 1.2");
+            player.runCommandAsync("particle minecraft:totem_particle ~ ~1 ~");
+            player.runCommandAsync("effect @s regeneration 20 2 true");
+            player.runCommandAsync("effect @s speed 30 1 true");
+            player.runCommandAsync("effect @s resistance 30 1 true");
+          } catch (cmdErr) {}
+        });
+      }
+    } catch (err) {
+      console.warn("[Addon] Не удалось выдать артефакт Создателя:", err);
+    }
+  }
+});
+
+console.warn("[Addon] Скрипт артефакта 'СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ' активен!");`,
+  };
+
+  const texture: BedrockTexture = {
+    id: texId,
+    name: itemId,
+    type: 'item',
+    width: 16,
+    height: 16,
+    pixelData: generateDefaultPixelTexture('crown', '#F59E0B'),
+  };
+
+  return { item, script, texture };
+}
+

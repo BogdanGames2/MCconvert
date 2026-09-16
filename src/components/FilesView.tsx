@@ -22,6 +22,9 @@ import {
   generateItemTextureJson,
   generateTerrainTextureJson,
   generateLangFile,
+  generateLightingGlobalJson,
+  generateAtmosphericFogJson,
+  generateWaterFogJson,
 } from '../utils/bedrockGenerator';
 
 interface FilesViewProps {
@@ -42,6 +45,8 @@ export const FilesView: React.FC<FilesViewProps> = ({ project }) => {
     'BP/scripts': true,
     'RP/textures': true,
     'RP/texts': true,
+    'RP/lighting': true,
+    'RP/fogs': true,
   });
 
   const toggleFolder = (folderKey: string) => {
@@ -127,13 +132,29 @@ export const FilesView: React.FC<FilesViewProps> = ({ project }) => {
     language: 'json',
   };
   virtualFiles['RP/texts/en_US.lang'] = {
-    content: generateLangFile(project),
+    content: generateLangFile(project, 'en'),
     language: 'properties',
   };
   virtualFiles['RP/texts/ru_RU.lang'] = {
-    content: generateLangFile(project),
+    content: generateLangFile(project, 'ru'),
     language: 'properties',
   };
+
+  // Render Dragon Deferred Shaders & Volumetric Fog
+  if (project.shaders?.enabled) {
+    virtualFiles['RP/lighting/global.json'] = {
+      content: JSON.stringify(generateLightingGlobalJson(project.shaders), null, 2),
+      language: 'json',
+    };
+    virtualFiles['RP/fogs/custom_fog.json'] = {
+      content: JSON.stringify(generateAtmosphericFogJson(project.shaders), null, 2),
+      language: 'json',
+    };
+    virtualFiles['RP/fogs/water_fog.json'] = {
+      content: JSON.stringify(generateWaterFogJson(project.shaders), null, 2),
+      language: 'json',
+    };
+  }
 
   const currentFile = virtualFiles[selectedFilePath] || {
     content: 'Файл не найден',
@@ -256,7 +277,7 @@ export const FilesView: React.FC<FilesViewProps> = ({ project }) => {
                 </div>
 
                 {/* RP Subfolders */}
-                {['textures', 'texts'].map((folder) => {
+                {['textures', 'texts', 'lighting', 'fogs'].map((folder) => {
                   const key = `RP/${folder}`;
                   const fileList = Object.keys(virtualFiles).filter((f) => f.startsWith(`${key}/`));
                   if (fileList.length === 0) return null;

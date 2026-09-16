@@ -13,6 +13,9 @@ import {
   generateRpBlocksJson,
   generateLangFile,
   renderPixelDataToDataUrl,
+  generateLightingGlobalJson,
+  generateAtmosphericFogJson,
+  generateWaterFogJson,
 } from './bedrockGenerator';
 
 /**
@@ -193,6 +196,25 @@ export async function populateResourcePack(zip: JSZip, project: AddonProject, pa
   const textsFolder = zip.folder('texts');
   textsFolder?.file('en_US.lang', generateLangFile(project, 'en'));
   textsFolder?.file('ru_RU.lang', generateLangFile(project, 'ru'));
+
+  // Bedrock Render Dragon Deferred Shaders
+  if (project.shaders?.enabled) {
+    const lightingFolder = zip.folder('lighting');
+    lightingFolder?.file(
+      'global.json',
+      JSON.stringify(generateLightingGlobalJson(project.shaders), null, 2)
+    );
+
+    const fogsFolder = zip.folder('fogs');
+    fogsFolder?.file(
+      'custom_fog.json',
+      JSON.stringify(generateAtmosphericFogJson(project.shaders), null, 2)
+    );
+    fogsFolder?.file(
+      'water_fog.json',
+      JSON.stringify(generateWaterFogJson(project.shaders), null, 2)
+    );
+  }
 }
 
 /**

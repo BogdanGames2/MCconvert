@@ -15,6 +15,8 @@ import { AiAssistant } from './components/AiAssistant';
 import { FilesView } from './components/FilesView';
 import { GuideView } from './components/GuideView';
 import { ChangelogView } from './components/ChangelogView';
+import { ShadersView } from './components/ShadersView';
+import { generateStarterCreatorItem, DEFAULT_SHADER_CONFIG } from './utils/bedrockGenerator';
 import { CheckCircle2, AlertCircle, Info, Download, Upload, RefreshCw } from 'lucide-react';
 
 const LOCAL_STORAGE_KEY = 'bedrock_addon_project_v1';
@@ -24,7 +26,11 @@ export default function App() {
     try {
       const saved = localStorage.getItem(LOCAL_STORAGE_KEY);
       if (saved) {
-        return JSON.parse(saved);
+        const parsed = JSON.parse(saved);
+        if (!parsed.shaders) {
+          parsed.shaders = DEFAULT_SHADER_CONFIG;
+        }
+        return parsed;
       }
     } catch (e) {
       console.warn('Could not load saved project from localStorage', e);
@@ -168,6 +174,40 @@ export default function App() {
     showToast('Файл проекта (.json) сохранен для резервной копии');
   };
 
+  const hasCreatorItem = project.items.some(
+    (it) => it.name.includes('СОЗДАТЕЛЬ') || it.identifier.includes('creator_item')
+  );
+
+  const handleEnsureCreatorItem = () => {
+    const kit = generateStarterCreatorItem(project.manifest.namespace);
+    setProject((prev) => {
+      const items = prev.items.some((i) => i.id === kit.item.id || i.identifier === kit.item.identifier)
+        ? prev.items
+        : [kit.item, ...prev.items];
+      const scripts = prev.scripts.some((s) => s.id === kit.script.id)
+        ? prev.scripts
+        : [...prev.scripts, kit.script];
+      const textures = prev.textures.some((t) => t.id === kit.texture.id)
+        ? prev.textures
+        : [...prev.textures, kit.texture];
+      return {
+        ...prev,
+        items,
+        scripts,
+        textures,
+        manifest: {
+          ...prev.manifest,
+          giveCreatorItemOnStart: true,
+          experimentalFeatures: {
+            ...prev.manifest.experimentalFeatures,
+            betaApis: true,
+          },
+        },
+      };
+    });
+    showToast('Предмет "СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ" и скрипт выдачи добавлены в проект!');
+  };
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col font-sans selection:bg-emerald-500 selection:text-white">
       {/* Sticky Navbar */}
@@ -189,6 +229,8 @@ export default function App() {
           <ManifestEditor
             manifest={project.manifest}
             onChange={(manifest) => setProject((p) => ({ ...p, manifest }))}
+            hasCreatorItem={hasCreatorItem}
+            onEnsureCreatorItem={handleEnsureCreatorItem}
           />
         )}
 
@@ -260,6 +302,18 @@ export default function App() {
           />
         )}
 
+        {currentTab === 'shaders' && (
+          <ShadersView
+            shaders={project.shaders}
+            manifest={project.manifest}
+            onChangeShaders={(shaders) => setProject((p) => ({ ...p, shaders }))}
+            onUpdateManifest={(manifest) => setProject((p) => ({ ...p, manifest }))}
+            onNavigateToAi={(presetPrompt) => {
+              setCurrentTab('ai_assistant');
+            }}
+          />
+        )}
+
         {currentTab === 'ai_assistant' && (
           <AiAssistant
             project={project}
@@ -282,6 +336,10 @@ export default function App() {
             onAddScript={(script) => {
               setProject((p) => ({ ...p, scripts: [...p.scripts, script] }));
               showToast(`Скрипт "${script.filename}" добавлен в проект!`);
+            }}
+            onUpdateShaders={(shaders) => {
+              setProject((p) => ({ ...p, shaders }));
+              showToast('Шейдеры успешно применены к проекту!');
             }}
           />
         )}
@@ -332,7 +390,7 @@ export default function App() {
             onClick={() => setCurrentTab('changelog')}
             className="hover:text-emerald-400 transition"
           >
-            Что нового (v1.2.0)
+            Что нового (v1.3.0)
           </button>
         </div>
       </footer>

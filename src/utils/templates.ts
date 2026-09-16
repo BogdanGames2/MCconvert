@@ -1,6 +1,10 @@
 import { AddonProject } from '../types/addon';
 import { generateBedrockUuid } from './uuid';
-import { generateDefaultPixelTexture } from './bedrockGenerator';
+import { generateDefaultPixelTexture, generateStarterCreatorItem, DEFAULT_SHADER_CONFIG } from './bedrockGenerator';
+
+const rubyCreatorKit = generateStarterCreatorItem('ruby');
+const magicCreatorKit = generateStarterCreatorItem('magic');
+const luckyCreatorKit = generateStarterCreatorItem('lucky');
 
 export const STARTER_TEMPLATES: { id: string; name: string; description: string; tag: string; project: AddonProject }[] = [
   {
@@ -20,14 +24,17 @@ export const STARTER_TEMPLATES: { id: string; name: string; description: string;
         bpModuleUuid: generateBedrockUuid(),
         rpUuid: generateBedrockUuid(),
         rpModuleUuid: generateBedrockUuid(),
+        giveCreatorItemOnStart: true,
         experimentalFeatures: {
           betaApis: true,
           holidayCreatorFeatures: true,
           customBiomes: false,
           upcomingCreatorFeatures: true,
+          renderDragonDeferred: true,
         },
       },
       items: [
+        rubyCreatorKit.item,
         {
           id: 'ruby_sword',
           name: 'Рубиновый Меч',
@@ -183,8 +190,10 @@ world.afterEvents.entityHurt.subscribe((event) => {
 
 console.warn("[Ruby Addon] Скрипты Bedrock успешно загружены!");`,
         },
+        rubyCreatorKit.script,
       ],
       textures: [
+        rubyCreatorKit.texture,
         {
           id: 'tex_ruby_sword',
           name: 'ruby_sword',
@@ -218,6 +227,7 @@ console.warn("[Ruby Addon] Скрипты Bedrock успешно загруже�
           height: 16,
         },
       ],
+      shaders: DEFAULT_SHADER_CONFIG,
       createdAt: new Date().toISOString(),
       updatedAt: new Date().toISOString(),
     },

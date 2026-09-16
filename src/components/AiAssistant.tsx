@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
-import { AddonProject, BedrockItem, BedrockBlock, BedrockEntity, BedrockRecipe, BedrockScript } from '../types/addon';
-import { Sparkles, Send, Bot, Wand2, Plus, Check, Loader2, MessageSquare, AlertTriangle, Code2 } from 'lucide-react';
+import { AddonProject, BedrockItem, BedrockBlock, BedrockEntity, BedrockRecipe, BedrockScript, BedrockShaderConfig } from '../types/addon';
+import { Sparkles, Send, Bot, Wand2, Plus, Check, Loader2, MessageSquare, AlertTriangle, Code2, Sun } from 'lucide-react';
 import { generateDefaultPixelTexture } from '../utils/bedrockGenerator';
 
 interface AiAssistantProps {
@@ -10,15 +10,18 @@ interface AiAssistantProps {
   onAddEntity: (entity: BedrockEntity) => void;
   onAddRecipe: (recipe: BedrockRecipe) => void;
   onAddScript: (script: BedrockScript) => void;
+  onUpdateShaders?: (shaders: BedrockShaderConfig) => void;
 }
 
 const PRESET_PROMPTS = [
+  '👑 Стартовый священный предмет "СОЗДАТЕЛЬ КАКОЙТА ЧЕЛ" со спецэффектами',
+  '🌅 Реалистичные шейдеры с золотым солнцем, ACES тонемаппингом и мягким туманом',
   '⚔️ Огненный клинок титана с уроном 15 и эффектом взрыва',
   '🛡️ Непробиваемый щит дракона с высокой прочностью',
+  '🌌 Неоновые шейдеры с ярким Bloom и фиолетовым свечением в ночи',
   '👾 Лавовый голем с 150 HP, атакующий зомби и игроков',
   '💎 Рубиновый лаки блок со случайным дропом через скрипты',
   '⚡ Посох вызова небесной молнии на Scripting API',
-  '🍗 Золотая пицца, дающая регенерацию и огнестойкость',
 ];
 
 export const AiAssistant: React.FC<AiAssistantProps> = ({
@@ -28,6 +31,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
   onAddEntity,
   onAddRecipe,
   onAddScript,
+  onUpdateShaders,
 }) => {
   const [activeSubTab, setActiveSubTab] = useState<'generator' | 'chat'>('generator');
   const [prompt, setPrompt] = useState('');
@@ -151,6 +155,17 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
       };
       onAddScript(newScript);
       setAddedStatus('✅ Скрипт успешно добавлен в проект!');
+    } else if (type === 'shader' || r.shaderConfig) {
+      if (r.shaderConfig && onUpdateShaders) {
+        onUpdateShaders({
+          ...r.shaderConfig,
+          enabled: true,
+          preset: 'custom',
+        });
+        setAddedStatus('✅ Шейдеры успешно применены к проекту!');
+      } else {
+        setAddedStatus('Шейдер сгенерирован!');
+      }
     } else {
       setAddedStatus('Контент добавлен!');
     }
@@ -273,6 +288,7 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
                   className="px-3 py-2 text-xs bg-slate-850 border border-slate-700 rounded-xl text-slate-300"
                 >
                   <option value="auto">Авто-определение</option>
+                  <option value="shader">Шейдеры (Render Dragon)</option>
                   <option value="item">Только Предмет</option>
                   <option value="block">Только Блок</option>
                   <option value="entity">Только Моб</option>
@@ -360,6 +376,37 @@ export const AiAssistant: React.FC<AiAssistantProps> = ({
                   <pre className="p-3 bg-slate-950 rounded-lg border border-slate-800 font-mono text-[11px] text-sky-400 max-h-48 overflow-y-auto scrollbar-thin">
                     {generatedResult.scriptCode}
                   </pre>
+                </div>
+              )}
+
+              {/* Shader Config if applicable */}
+              {generatedResult.shaderConfig && (
+                <div className="p-3.5 bg-slate-950 rounded-lg border border-amber-500/30 space-y-2">
+                  <div className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+                    <Sun className="w-4 h-4" />
+                    Параметры освещения и шейдеров (Render Dragon Deferred):
+                  </div>
+                  <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-[11px]">
+                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Солнце</span>
+                      <span className="font-bold text-amber-400">{generatedResult.shaderConfig.sunIntensity}x</span>
+                    </div>
+                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Цвет солнца</span>
+                      <div className="flex items-center gap-1 mt-0.5">
+                        <span className="w-3 h-3 rounded-full border border-white/20" style={{ backgroundColor: generatedResult.shaderConfig.sunColor }} />
+                        <span className="font-mono text-slate-200">{generatedResult.shaderConfig.sunColor}</span>
+                      </div>
+                    </div>
+                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Плотность тумана</span>
+                      <span className="font-bold text-sky-400">{generatedResult.shaderConfig.fogDensity}</span>
+                    </div>
+                    <div className="bg-slate-900 p-2 rounded border border-slate-800">
+                      <span className="text-slate-400 block text-[10px]">Tone Mapping</span>
+                      <span className="font-mono text-emerald-400 uppercase">{generatedResult.shaderConfig.toneMapping}</span>
+                    </div>
+                  </div>
                 </div>
               )}
             </div>

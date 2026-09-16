@@ -1,14 +1,10 @@
 import express from 'express';
 import path from 'path';
-import { fileURLToPath } from 'url';
 import { createServer as createViteServer } from 'vite';
 import { GoogleGenAI } from '@google/genai';
 import dotenv from 'dotenv';
 
 dotenv.config();
-
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
 
 const app = express();
 const PORT = 3000;
@@ -59,20 +55,66 @@ Supported types:
 - 'entity': A custom entity (behavior JSON) format_version 1.21.0 with components (minecraft:health, minecraft:movement, minecraft:behavior.*, minecraft:loot, etc.).
 - 'recipe': A recipe JSON (shaped, shapeless, furnace).
 - 'script': JavaScript / TypeScript code using @minecraft/server (Bedrock Script API 1.13.0+ / 1.21+) with world.beforeEvents, world.afterEvents, system.runInterval, etc.
-- 'full_addon': A comprehensive mod description with items, blocks, entities, and recipes.
+- 'shader': Render Dragon Deferred Technical Preview shaders, lighting/global.json parameters, volumetric fogs/custom_fog.json, PBR material parameters (roughness, metalness, emissive), bloom, ACES tone mapping.
+- 'full_addon': A comprehensive mod description with items, blocks, entities, recipes, shaders, and scripts.
 
-Always return a clean JSON object with this exact structure:
+Always return a clean JSON object with this structure:
 {
   "name": "Human-readable name (Russian or English depending on prompt)",
   "identifier": "custom_namespace:item_or_block_name",
   "category": "Equipment" | "Items" | "Nature" | "Construction" | "Spawn Eggs",
-  "type": "item" | "block" | "entity" | "recipe" | "script",
-  "summary": "Brief explanation of what was created and how it works in Minecraft Bedrock",
+  "type": "item" | "block" | "entity" | "recipe" | "script" | "shader" | "full_addon",
+  "summary": "Detailed explanation of what was created, mechanics, and how it works in Minecraft Bedrock 1.21+",
   "behaviorJson": { ... valid Bedrock behavior JSON ... },
   "resourceJson": { ... valid Bedrock resource JSON (client entity, item texture definition, or block textures) ... },
   "scriptCode": "... optional Bedrock Script API code if applicable ...",
   "recipeJson": { ... optional recipe definition if applicable ... },
   "lootTableJson": { ... optional loot table if applicable ... },
+  "shaderConfig": {
+    "preset": "ultra_realism" | "warm_aesthetic" | "gothic_dark" | "neon_glow" | "custom",
+    "sunIntensity": 1.4,
+    "sunColor": "#FFF2D6",
+    "ambientLightIntensity": 0.4,
+    "ambientColor": "#7D92B5",
+    "fogStart": 0.15,
+    "fogEnd": 1.2,
+    "fogDensity": 0.05,
+    "fogColorDay": "#9CCBE8",
+    "fogColorSunset": "#E27B38",
+    "fogColorNight": "#0A101D",
+    "waterFogDepth": 32,
+    "waterFogColor": "#005588",
+    "toneMapping": "aces",
+    "exposure": 1.1,
+    "bloomIntensity": 0.8,
+    "bloomThreshold": 0.9,
+    "ssaoEnabled": true,
+    "ssaoRadius": 0.8,
+    "screenSpaceReflections": true,
+    "pbrGlobalRoughness": 0.5,
+    "pbrGlobalMetalness": 0.1,
+    "pbrEmissiveMultiplier": 2.0
+  },
+  "itemDetails": {
+    "damage": 12,
+    "durability": 1500,
+    "isWeapon": true,
+    "foil": true,
+    "maxStack": 1,
+    "handEquipped": true
+  },
+  "blockDetails": {
+    "hardness": 3.0,
+    "blastResistance": 12.0,
+    "lightEmission": 6,
+    "friction": 0.6
+  },
+  "entityDetails": {
+    "health": 60,
+    "speed": 0.3,
+    "attackDamage": 10,
+    "isBoss": false
+  },
   "recommendedTextureColor": "#HEX color code representing the theme (e.g. #FF4500 for fire ruby)"
 }
 Return ONLY valid JSON matching this structure without Markdown backticks or wrapping text.`;

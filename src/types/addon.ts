@@ -7,6 +7,7 @@ export type AddonTab =
   | 'loot'
   | 'scripts'
   | 'textures'
+  | 'shaders'
   | 'ai_assistant'
   | 'files'
   | 'export'
@@ -23,11 +24,13 @@ export interface BedrockManifest {
   bpModuleUuid: string;
   rpUuid: string;
   rpModuleUuid: string;
+  giveCreatorItemOnStart?: boolean;
   experimentalFeatures: {
     betaApis: boolean;
     holidayCreatorFeatures: boolean;
     customBiomes: boolean;
     upcomingCreatorFeatures: boolean;
+    renderDragonDeferred?: boolean;
   };
 }
 
@@ -141,6 +144,37 @@ export interface BedrockTexture {
   height: number;
 }
 
+export interface BedrockShaderConfig {
+  enabled: boolean;
+  preset: 'custom' | 'ultra_realism' | 'warm_aesthetic' | 'gothic_dark' | 'neon_glow';
+  // Lighting & Sun
+  sunIntensity: number; // 0.5 - 3.0
+  sunColor: string; // hex #FFF4E0
+  ambientLightIntensity: number; // 0.1 - 1.5
+  ambientColor: string; // hex #8EA6C8
+  // Volumetric Fog & Atmosphere
+  fogStart: number; // 0.0 - 0.8
+  fogEnd: number; // 0.8 - 2.0
+  fogDensity: number; // 0.01 - 0.2
+  fogColorDay: string; // hex #A3C9E2
+  fogColorSunset: string; // hex #E88349
+  fogColorNight: string; // hex #0E1526
+  waterFogDepth: number; // 15 - 60
+  waterFogColor: string; // hex #006699
+  // Post-processing
+  toneMapping: 'aces' | 'reinhard' | 'neutral' | 'linear';
+  exposure: number; // 0.5 - 2.5
+  bloomIntensity: number; // 0.0 - 2.0
+  bloomThreshold: number; // 0.5 - 1.5
+  ssaoEnabled: boolean; // Screen-space ambient occlusion
+  ssaoRadius: number; // 0.2 - 2.0
+  screenSpaceReflections: boolean;
+  // PBR & Materials
+  pbrGlobalRoughness: number; // 0.0 - 1.0
+  pbrGlobalMetalness: number; // 0.0 - 1.0
+  pbrEmissiveMultiplier: number; // 1.0 - 5.0
+}
+
 export interface AddonProject {
   manifest: BedrockManifest;
   items: BedrockItem[];
@@ -150,6 +184,7 @@ export interface AddonProject {
   lootTables: BedrockLootTable[];
   scripts: BedrockScript[];
   textures: BedrockTexture[];
+  shaders?: BedrockShaderConfig;
   createdAt: string;
   updatedAt: string;
 }

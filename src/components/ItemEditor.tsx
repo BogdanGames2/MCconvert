@@ -113,12 +113,20 @@ export const ItemEditor: React.FC<ItemEditorProps> = ({
                     )}
                   </div>
                   <div className="truncate">
-                    <div className="text-xs font-semibold truncate text-slate-100">{it.name}</div>
+                    <div className="text-xs font-semibold truncate text-slate-100 flex items-center gap-1">
+                      {it.name.includes('СОЗДАТЕЛЬ') && <span title="Стартовый предмет создателя">👑</span>}
+                      <span className="truncate">{it.name}</span>
+                    </div>
                     <div className="text-[10px] font-mono text-emerald-400 truncate">{it.identifier}</div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-1 shrink-0">
+                  {it.foil && (
+                    <span className="text-[9px] bg-purple-950/80 text-purple-300 px-1 py-0.5 rounded border border-purple-800/40">
+                      ✨
+                    </span>
+                  )}
                   {it.isWeapon && (
                     <span className="text-[10px] bg-red-950/80 text-red-300 px-1.5 py-0.5 rounded border border-red-800/40">
                       ⚔️ {it.damage}
