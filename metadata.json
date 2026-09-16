@@ -1,0 +1,8 @@
+{
+  "name": "Minecraft Bedrock Addon Creator",
+  "description": "Профессиональный конструктор модов и аддонов для Minecraft Bedrock Edition с генерацией предметов, блоков, мобов, скриптов, текстурным редактором и экспортом .mcaddon",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
